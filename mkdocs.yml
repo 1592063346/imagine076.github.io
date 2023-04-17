@@ -1,6 +1,6 @@
 site_name: Imagine076's Blog
-repo_url: https://www.baidu.com
-repo_name: TODO
+repo_url: https://github.com/1592063346/imagine076.github.ioy
+repo_name: imagine076.github.io
 
 theme:
   name: material
@@ -24,6 +24,8 @@ theme:
   logo: assets/avatar_round.png
 
 plugins:
+  - git-revision-date-localized:
+      enable_creation_date: true
   - search:
       separator: '[\s\u200b\-]'
   - glightbox
@@ -69,5 +71,7 @@ markdown_extensions:
 nav:
   - about.md
   - overview.md
-  - 栏目一:
+  - 数学杂记:
+    - math/proof.md
+  - 其他:
     - hpc/try.md
