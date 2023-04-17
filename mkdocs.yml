@@ -4,6 +4,7 @@ repo_name: imagine076.github.io
 
 theme:
   name: material
+  custom_dir: overrides
   language: zh
   features:
     - navigation.path
@@ -22,6 +23,9 @@ theme:
         icon: material/weather-sunny
         name: Switch to light mode
   logo: assets/avatar_round.png
+  favicon: assets/avatar_round.png
+  icon:
+    logo: assets/avatar_round.png
 
 plugins:
   - git-revision-date-localized:
