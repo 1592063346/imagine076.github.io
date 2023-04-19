@@ -1,0 +1,316 @@
+---
+comments: true
+---
+
+# MPI 奇偶排序
+
+## 任务
+
+一句话描述：使用 MPI 实现奇偶排序算法，要求**进程只能向其相邻进程发送消息**。
+
+关于奇偶排序与具体任务的更详细介绍以及代码框架的下载，可展开下面的内容获取（抄自课程页面：[https://lab.cs.tsinghua.edu.cn/hpc/doc/exp/1.odd_even_sort/](https://lab.cs.tsinghua.edu.cn/hpc/doc/exp/1.odd_even_sort/)，有小改动）。
+
+??? tip "具体任务"
+
+    ### 背景介绍
+
+    本题的基本要求为使用 MPI 实现奇偶排序算法， 并且 MPI 进程**只能向其相邻进程发送消息**。
+
+    奇偶排序是一种比较排序，它由两个主要阶段组成：**偶数阶段**和**奇数阶段**。在**偶数阶段**中，比较所有相邻元素的`(偶数，奇数)`索引对，如果存在顺序错误，则将交换元素。类似地，对**奇数阶段**中的 `(奇数, 偶数)` 索引对重复相同的过程。奇偶排序算法的工作原理是将这两个阶段交替进行，直到每个阶段都不交换元素为止。
+
+    为了更好地理解该算法，下面逐步说明了奇偶排序的执行流程（在以下示例中，我们按升序排序）：
+
+    1. **【偶数阶段】** 满足 `(偶数，奇数)` 索引的相邻元素组成元素对。
+    ```python
+    Index    0   1   2   3   4   5   6   7
+    Value   (6   1) (4   8) (2   5) (9   3)
+    ```
+    2. **【偶数阶段】** 如果元素对中存在顺序错误，则交换两个元素。
+    ```python
+    Index    0   1   2   3   4   5   6   7
+    Value   (1   6) (4   8) (2   5) (3   9)
+    ```
+    3. **【奇数阶段】** 满足 `(奇数，偶数)` 索引相邻元素被组成元素对。
+    ```python
+    Index    0   1   2   3   4   5   6   7
+    Value    1  (6   4) (8   2) (5   3)  9
+    ```
+    4. **【奇数阶段】** 如果元素对中存在顺序错误，则交换两个元素。
+    ```python
+    Index    0   1   2   3   4   5   6   7
+    Value    1  (4   6) (2   8) (3   5)  9
+    ```
+    5. 交替运行**偶数阶段**和**奇数阶段**，直到两个阶段都**没有元素交换**。
+
+    接下来，提供一种并行化的奇偶排序思路（在以下示例中，我们按升序排序）：
+
+    6. 进程内排序。
+    ```python
+    Process     0         1         2         3          4           5          6           7
+    Value   |6 8 3 5| |9 4 1 7| |8 2 1 7| |3 5 2 9| |8 11 4 29| |34 1 4 56| |5 7 6 11| |10 9 5 2| （排序前）
+    Value   |3 5 6 8| |1 4 7 9| |1 2 7 8| |2 3 5 9| |4 8 11 29| |1 4 34 56| |5 6 7 11| |2 5 9 10| （排序后）
+    ```
+    7. **【偶数阶段】** 满足 `(偶数，奇数)` 索引的相邻进程组成进程对。
+    ```python
+    Process      0         1           2         3            4           5            6          7
+    Value   (|3 5 6 8| |1 4 7 9|) (|1 2 7 8| |2 3 5 9|) (|4 8 11 29| |1 4 34 56|) (|5 6 7 11| |2 5 9 10|) 
+    ```
+    8. **【偶数阶段】** 如果偶数进程的最大值大于奇数进程的最小值，则合并、排序两个进程的序列并重新分配至进程中（元素交换）。
+    ```python
+    Process     0           1          2         3           4           5             6          7
+    Value   (|1 3 4 5   6 7 8 9|) (|1 2 2 3   5 7 8 9|) (|1 4 4 8   11 29 34 56|) (|2 5 5 6   7 9 10 11|) （合并排序）
+    Value   (|1 3 4 5| |6 7 8 9|) (|1 2 2 3| |5 7 8 9|) (|1 4 4 8| |11 29 34 56|) (|2 5 5 6| |7 9 10 11|) （重新分配）
+    ```
+    9. **【奇数阶段】** 满足 `(奇数，偶数)` 索引的相邻进程组成进程对。
+    ```python
+    Process     0          1         2           3         4             5           6           7
+    Value   |1 3 4 5| (|6 7 8 9| |1 2 2 3|) (|5 7 8 9| |1 4 4 8|) (|11 29 34 56| |2 5 5 6|) |7 9 10 11|
+    ```
+    10. **【奇数阶段】** 如果奇数进程的最大值大于偶数进程的最小值，则合并、排序两个进程的序列并重新分配至进程中（元素交换）。
+    ```python
+    Process     0          1         2           3         4           5           6             7
+    Value   |1 3 4 5| (|1 2 2 3   6 7 8 9|) (|1 4 4 5   7 8 8 9|) (|2 5 5 6   11 29 34 56|) |7 9 10 11| （合并排序）
+    Value   |1 3 4 5| (|1 2 2 3| |6 7 8 9|) (|1 4 4 5| |7 8 8 9|) (|2 5 5 6| |11 29 34 56|) |7 9 10 11| （重新分配）
+    ```
+    11. 交替运行**偶数阶段**和**奇数阶段**，直到两个阶段都**没有元素交换**。
+
+    ### 实验步骤
+
+    #### 实验文件
+
+    可以从[这里](https://github.com/1592063346/imagine076.github.io/releases/download/attachment-file/PA1.zip)进行下载。
+
+    #### 具体任务
+
+    填写 `odd_even_sort.cpp` 文件中的 `sort` 函数，在该函数内实现并行化的奇偶排序算法（具体请见背景介绍），并注意：
+
+    12. 使用升序排序；
+    13. 每个进程**只允许向相邻进程发送消息**。
+
+    #### 框架介绍
+
+    1. 框架首先读入输入文件中的序列，每个进程分别读入序列的一部分，并传递给 `sort` 函数。
+    2. 框架将在排序之后进行检验，只有所有进程都输出 `pass` 才表示排序后序列通过检验，存在错误顺序的将输出 `failed` 。4 进程运行时正确输出如下（顺序未必一致）：
+    ```text
+    ...
+    Rank 0: pass
+    Rank 2: pass
+    Rank 1: pass
+    Rank 3: pass
+    ...
+    ```
+    3. 框架对 `sort` 函数进行计时，并作为性能评判依据。计时前均会进行进程间同步。计时输出跟随在正确性检验之后，格式如下：
+    ```text
+    ...
+    Execution time of function sort is 3330.42 ms.
+    ...
+    ```
+
+    #### 运行流程
+
+    4. 加载环境：`spack load openmpi`。
+    5. 编译各个文件： `make -j4`（可以调整 `Makefile` 中的 `CFLAGS` 控制编译选项）。
+    6. `generate.cpp` 编译得到的 `generate` 可生成乱序序列作为输入：
+    ```bash
+    $ ./generate <number_of_elements> <file>
+    ```
+    其中两个参数的含义分别是：
+
+          - `number_of_elements` : 生成的乱序序列的元素个数 $n\ (0 \le n \le 2147483647)$；
+          - `file` : 存储乱序序列的输出文件名。
+
+          具体运行命令，例如：
+          ```bash
+          $ mkdir data
+          $ ./generate 256 ./256.dat
+          ```
+
+    7. 运行 `odd_even_sort` 对输入文件中的乱序序列进行排序：
+    ```bash
+    $ srun -n <nprocs> ./odd_even_sort <number_of_elements> <input_file>
+    ```
+    其中三个参数的含义分别是：  
+
+          - `nprocs` : 运行的进程数；
+          - `number_of_elements` : 输入乱序序列的元素个数 $n\ (0 \le n \le 2147483647)$；
+          - `input_file` : 输入文件名，其中包含 $n$ 个待排序的 32 位浮点数（二进制格式）。此处可直接使用 `generate` 的输出文件，请参考输入文件 `./data/100.dat`。
+    
+          具体运行命令，例如：
+          ```bash
+          $ srun -n 4 ./odd_even_sort 256 ./256.dat
+          ```
+
+    #### 测试数据
+
+    除了同学自己生成的数据外，助教也提供了一些数据可供同学测试，文件名即为数据数量（如 `100.dat` 表示 $n = 100$），可从[这里](https://github.com/1592063346/imagine076.github.io/releases/download/attachment-data/data.zip)单独下载到自己的目录下。
+
+    #### 优化策略
+
+    8. 可以尝试将计算时间和通信时间尽可能地重叠。例如合并相邻进程序列的计算和下一轮迭代的通信之间存在重叠机会。可以通过点对点异步通信实现。
+    9. 可以尝试将进程与核绑定，运行性能会更稳定。
+    10. **如果不确定自己的优化方法或实现是否符合规则，请与助教进行讨论。**
+
+
+    #### 注意事项
+
+    1. 你的修改应该仅限于 `odd_even_sort.cpp` 文件。即使修改了其他文件（如用于调试等目的），也要确保在**不进行这些修改**的情况下，程序能够正确编译运行。助教将替换所有其他文件为下发的版本后进行评测，以确保评分的正确性和公平性。
+    2. 下发的 `odd_even_sort.cpp` 中的 `sort` 函数为空，需在填写 `sort` 函数后，编译运行 `odd_even_sort` 后才能正确工作。
+
+
+    ### 实验评测
+
+    3. 正确性（$80 \%$）
+        * 在作业截止日期之后进行正确性检查，你的程序将会在 10 个测试用例下进行测试，每个测试用例 8 分。你将获得所有通过的测试用例的分数。
+        * 助教可能使用符合要求的**任意进程数**来运行你的程序，因此请确保你的实现是正确的。
+    
+    4. 性能（$10 \%$）
+        * 每组测试用例的性能分为 1 分。对于每组测试用例，只有当你获得了正确性分数后，才能得到性能分。
+        * 性能测试只针对 `sort` 函数，即仅对 `sort` 函数计时。
+        * 由于不同实现在不同情况下的性能表现可能不同，此部分最终的运行方式由同学确定， **至多可以使用 2 机 56 进程** 。请同学自行修改 `run.sh` 脚本中的运行命令，助教将使用此作为最终的性能评分依据。<font color="#dd0000">请确保命令行以 `$*` 接受所有参数，因为最终正确性/性能测试所用的校验方法与当前给定版本不同，具有更多输入参数。</font>
+        * <font color="#dd0000">关于性能评分：（1）每组测试用例有一个性能线（不公布），超过性能线的同学将得到满分。（2）未达到性能线的同学，根据测试性能在**未达性能线同学**的排名给出每组测试用例的分数，每组测试用例各自排名。对于某组测试用例，未达到性能线的同学中，性能排名前 $10 \%$ 的同学得到 $90 \%$ 的分数，排名 $10 \% \sim 20 \%$ 的同学得到 $80 \%$ 的分数，依此类推。</font>
+        * <font color="#dd0000">以下给出助教提供的 7 组公开测试用例的性能线（表示较优的性能水平）作为参考。同学可以参考该性能线调试优化程序，但不保证在公开数据上达到性能线就一定能在评分数据上达到性能线。</font>
+
+            | 测试用例 | 性能线（运行时间） |
+            | ---- | ---- |
+            |data/100.dat |0.015 ms|
+            |data/1000.dat |0.07 ms|
+            |data/10000.dat |0.25 ms|
+            |data/100000.dat |1.2 ms|
+            |data/1000000.dat |6 ms|
+            |data/10000000.dat |75 ms|
+            |data/100000000.dat |770 ms|
+
+    5. 实验报告（$10 \%$）
+
+## 实现历程
+
+待填。
+
+## 代码
+
+最终文件 `odd_even_sort.cpp` 中的函数 `sort` 如下。
+
+```cpp title="odd_even_sort.cpp"
+void Worker::sort() {
+  if (!block_len) {
+    return;
+  }
+
+  std::sort(data, data + block_len);
+  float* foobar = data;
+  size_t comm_block_len = (n + nprocs - 1) / nprocs;
+  float* adj_data = new float[comm_block_len];
+  float* buffer = new float[block_len];
+
+  for (int i = 0; i < nprocs; ++i) {
+    int adj_rank;
+    size_t adj_block_len = block_len;
+    if (!(i & 1)) {
+      adj_rank = (rank & 1) ? rank - 1 : rank + 1;
+    } else {
+      adj_rank = (rank & 1) ? rank + 1 : rank - 1;
+    }
+    adj_block_len = (adj_rank * comm_block_len >= n) ? 0 : std::min(comm_block_len, n - adj_rank * comm_block_len);
+
+    if (~adj_rank && adj_rank < nprocs && adj_block_len) {
+      float compared_data;
+      size_t x = 0, y = 0;
+      if (rank < adj_rank) {
+        MPI_Sendrecv(data + block_len - 1, 1, MPI_FLOAT, adj_rank, i << 1, &compared_data, 1, MPI_FLOAT, adj_rank, i << 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (data[block_len - 1] < compared_data) {
+          continue;
+        }
+      } else {
+        MPI_Sendrecv(data, 1, MPI_FLOAT, adj_rank, i << 1, &compared_data, 1, MPI_FLOAT, adj_rank, i << 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (data[0] > compared_data) {
+          continue;
+        }
+      }
+
+      MPI_Sendrecv(data, block_len, MPI_FLOAT, adj_rank, i << 1 | 1, adj_data, adj_block_len, MPI_FLOAT, adj_rank, i << 1 | 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+      if (rank < adj_rank) {
+        while (x + y < block_len) {
+          if (x == block_len || (y < adj_block_len && data[x] > adj_data[y])) {
+            buffer[x + y] = adj_data[y];
+            ++y;
+          } else {
+            buffer[x + y] = data[x];
+            ++x;
+          }
+        }
+        std::swap(data, buffer);
+      } else {
+        while (x + y < block_len) {
+          if (x == block_len || (y < adj_block_len && data[block_len - 1 - x] < adj_data[adj_block_len - 1 - y])) {
+            buffer[block_len - 1 - x - y] = adj_data[adj_block_len - 1 - y];
+            ++y;
+          } else {
+            buffer[block_len - 1 - x - y] = data[block_len - 1 - x];
+            ++x;
+          }
+        }
+        std::swap(data, buffer);
+      }
+    }
+  }
+
+  if (data != foobar) {
+    memcpy(foobar, data, block_len * sizeof(float));
+    std::swap(data, buffer);
+  }
+  delete[] adj_data;
+  delete[] buffer;
+}
+```
+
+主运行脚本 `run.sh` 如下。
+
+``` bash title="run.sh"
+#!/bin/bash
+
+#       ~n | cmd
+#      100 | -N 1 -n 1
+#     1000 | -N 1 -n 2
+#    10000 | -N 1 -n 7
+#   100000 | -N 1 -n 28
+#  1000000 | -N 2 -n 56
+if [ $2 -lt 1000 ]
+then
+  srun -N 1 -n 1 --cpu-bind=none ./bind.sh $*
+elif [ $2 -lt 10000 ]
+then
+  srun -N 1 -n 2 --cpu-bind=none ./bind.sh $*
+elif [ $2 -lt 100000 ]
+then
+  srun -N 1 -n 7 --cpu-bind=none ./bind.sh $*
+elif [ $2 -lt 1000000 ]
+then
+  srun -N 1 -n 28 --cpu-bind=none ./bind.sh $*
+else
+  srun -N 2 -n 56 --cpu-bind=none ./bind.sh $*
+fi
+```
+
+进程与核的绑定脚本 `bind.sh` 如下。
+
+``` bash title="bind.sh"
+#!/bin/bash
+
+LOCAL_RANK=$SLURM_LOCALID # for SLURM
+
+NCPUS=28
+NUM_NUMA=2
+
+# calculate binding parameters
+# bind to sequential cores in a NUMA domain
+NUMA_ID=$(($LOCAL_RANK / 14))
+NUMA_OFFSET=$(($LOCAL_RANK % 14))
+CORE_START=$(($NUMA_OFFSET * 2 + $NUMA_ID))
+CORE_END=$(($NUMA_OFFSET * 2 + $NUMA_ID))
+CORES=$(seq -s, $CORE_START $NUM_NUMA $CORE_END)
+
+# execute command with specific cores
+echo "Process $LOCAL_RANK on $(hostname) bound to core $CORES"
+exec numactl -C "$CORES" $@
+```

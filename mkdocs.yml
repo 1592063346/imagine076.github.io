@@ -7,6 +7,8 @@ theme:
   custom_dir: overrides
   language: zh
   features:
+    - content.code.copy
+    - content.code.select
     - navigation.path
   palette: 
     # Palette toggle for light mode
@@ -77,5 +79,5 @@ nav:
   - overview.md
   - 数学杂记:
     - math/proof.md
-  - 其他:
-    - hpc/try.md
+  - 高性能计算:
+    - hpc/sort.md
