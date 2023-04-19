@@ -78,7 +78,7 @@ comments: true
 
     #### 实验文件
 
-    可以从[这里](https://github.com/1592063346/imagine076.github.io/releases/download/attachment-file/PA1.zip)进行下载。
+    可以从[这里](https://github.com/1592063346/imagine076.github.io/releases/download/release/PA1.zip)进行下载。
 
     #### 具体任务
 
@@ -89,8 +89,8 @@ comments: true
 
     #### 框架介绍
 
-    1. 框架首先读入输入文件中的序列，每个进程分别读入序列的一部分，并传递给 `sort` 函数。
-    2. 框架将在排序之后进行检验，只有所有进程都输出 `pass` 才表示排序后序列通过检验，存在错误顺序的将输出 `failed` 。4 进程运行时正确输出如下（顺序未必一致）：
+    14. 框架首先读入输入文件中的序列，每个进程分别读入序列的一部分，并传递给 `sort` 函数。
+    15. 框架将在排序之后进行检验，只有所有进程都输出 `pass` 才表示排序后序列通过检验，存在错误顺序的将输出 `failed` 。4 进程运行时正确输出如下（顺序未必一致）：
     ```text
     ...
     Rank 0: pass
@@ -99,7 +99,7 @@ comments: true
     Rank 3: pass
     ...
     ```
-    3. 框架对 `sort` 函数进行计时，并作为性能评判依据。计时前均会进行进程间同步。计时输出跟随在正确性检验之后，格式如下：
+    16. 框架对 `sort` 函数进行计时，并作为性能评判依据。计时前均会进行进程间同步。计时输出跟随在正确性检验之后，格式如下：
     ```text
     ...
     Execution time of function sort is 3330.42 ms.
@@ -108,9 +108,9 @@ comments: true
 
     #### 运行流程
 
-    4. 加载环境：`spack load openmpi`。
-    5. 编译各个文件： `make -j4`（可以调整 `Makefile` 中的 `CFLAGS` 控制编译选项）。
-    6. `generate.cpp` 编译得到的 `generate` 可生成乱序序列作为输入：
+    17. 加载环境：`spack load openmpi`。
+    18. 编译各个文件： `make -j4`（可以调整 `Makefile` 中的 `CFLAGS` 控制编译选项）。
+    19. `generate.cpp` 编译得到的 `generate` 可生成乱序序列作为输入：
     ```bash
     $ ./generate <number_of_elements> <file>
     ```
@@ -125,7 +125,7 @@ comments: true
           $ ./generate 256 ./256.dat
           ```
 
-    7. 运行 `odd_even_sort` 对输入文件中的乱序序列进行排序：
+    20. 运行 `odd_even_sort` 对输入文件中的乱序序列进行排序：
     ```bash
     $ srun -n <nprocs> ./odd_even_sort <number_of_elements> <input_file>
     ```
@@ -142,13 +142,13 @@ comments: true
 
     #### 测试数据
 
-    除了同学自己生成的数据外，助教也提供了一些数据可供同学测试，文件名即为数据数量（如 `100.dat` 表示 $n = 100$），可从[这里](https://github.com/1592063346/imagine076.github.io/releases/download/attachment-data/data.zip)单独下载到自己的目录下。
+    除了同学自己生成的数据外，助教也提供了一些数据可供同学测试，文件名即为数据数量（如 `100.dat` 表示 $n = 100$），可从[这里](https://github.com/1592063346/imagine076.github.io/releases/download/release/data.zip)单独下载到自己的目录下。
 
     #### 优化策略
 
-    8. 可以尝试将计算时间和通信时间尽可能地重叠。例如合并相邻进程序列的计算和下一轮迭代的通信之间存在重叠机会。可以通过点对点异步通信实现。
-    9. 可以尝试将进程与核绑定，运行性能会更稳定。
-    10. **如果不确定自己的优化方法或实现是否符合规则，请与助教进行讨论。**
+    21. 可以尝试将计算时间和通信时间尽可能地重叠。例如合并相邻进程序列的计算和下一轮迭代的通信之间存在重叠机会。可以通过点对点异步通信实现。
+    22. 可以尝试将进程与核绑定，运行性能会更稳定。
+    23. **如果不确定自己的优化方法或实现是否符合规则，请与助教进行讨论。**
 
 
     #### 注意事项
