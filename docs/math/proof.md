@@ -28,7 +28,7 @@ $$P(z) = a_0z^n + a_1z^{n - 1} + \cdots + a_n, ~~ a_0 \neq 0$$
 
     设 $D$ 是由 $\mathbb C$ 中有限条可求长简单闭曲线围成的区域，$f \in H(\overline{D})$ 且在 $\partial D$ 上无零点. 记 $m$ 为 $f$ 在 $D$ 中的零点个数（记重数），则
     
-    $$\frac{1}{2\pi{\rm i}}\int_{\partial D} \frac{f'(z)}{f(z)} = \frac{1}{2\pi}\Delta_{\partial D}{\rm Arg}\,f(z) = m.$$
+    $$\frac{1}{2\pi{\rm i}}\int_{\partial D} \frac{f'(z)}{f(z)}\,{\rm d}z = \frac{1}{2\pi}\Delta_{\partial D}{\rm Arg}\,f(z) = m.$$
 
 由于 $\displaystyle \lim_{z\to\infty} P(z) = \infty$，故当 $R > 0$ 足够大时，$P$ 在 $\gamma: |z| = R$ 上不存在零点，从而依辐角原理，在 $B(0, R)$ 内 $P$ 的零点个数为 $\displaystyle \frac{1}{2\pi}\Delta_{\gamma}{\rm Arg}\,P(z)$. 注意到
 
