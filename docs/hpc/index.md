@@ -6,7 +6,7 @@ comments: true
 
 这一个专栏主要用于记录本学期《高性能计算导论》课程中的重要作业或实验。目前计划记录下面这些内容：
 
-- 课程作业：使用 MPI 实现 Ring Allreduce 算法
+- 课程作业：使用 MPI 实现 Ring AllReduce 算法
 - 课程实验一：MPI 奇偶排序
 - 课程实验二：CUDA 全源最短路
 - 课程实验三：OpenMP/CUDA 稀疏矩阵-矩阵乘法
