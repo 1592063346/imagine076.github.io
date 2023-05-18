@@ -58,7 +58,7 @@ __global__ void step1(int n, int p, int* graph) {
 
 /**
  * The following naive implementation of step-2 only runs around 7ms at n = 10000,
- * and its performance went worse after i eliminated all bank conflicts.
+ * and its performance went worse after I eliminated all bank conflicts.
  * Therefore I'm not going to change it.
  */
 
