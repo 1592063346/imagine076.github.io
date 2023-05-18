@@ -8,7 +8,7 @@ comments: true
 
 一句话描述：使用 MPI 实现奇偶排序算法，要求**进程只能向其相邻进程发送消息**。
 
-关于奇偶排序与具体任务的更详细介绍以及代码框架的下载，可展开下面的内容获取（抄自课程页面：[https://lab.cs.tsinghua.edu.cn/hpc/doc/exp/1.odd_even_sort/](https://lab.cs.tsinghua.edu.cn/hpc/doc/exp/1.odd_even_sort/)，有小改动）。
+关于奇偶排序与具体任务的更详细介绍以及代码框架的下载，可展开下面的内容获取（抄自[课程文档仓库](https://github.com/thu-cs-lab/HPC-Lab-Docs/)，有小改动）。
 
 ??? tip "具体任务"
 

@@ -80,4 +80,6 @@ nav:
   - 数学杂记:
     - math/proof.md
   - 高性能计算:
+    - hpc/index.md
     - hpc/sort.md
+    - hpc/apsp.md
