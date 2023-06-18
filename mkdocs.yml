@@ -83,3 +83,4 @@ nav:
     - hpc/index.md
     - hpc/sort.md
     - hpc/apsp.md
+    - hpc/spmm.md

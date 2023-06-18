@@ -9,4 +9,4 @@ comments: true
 - 课程作业：使用 MPI 实现 Ring AllReduce 算法
 - 课程实验一：MPI 奇偶排序
 - 课程实验二：CUDA 全源最短路
-- 课程实验三：OpenMP/CUDA 稀疏矩阵-矩阵乘法
+- 课程实验三：OpenMP/CUDA 稀疏矩阵乘法
